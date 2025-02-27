@@ -31,17 +31,30 @@ public class ChatServer {
         clients.remove(username);
     }
 
-    public static void broadcastMessage(String sender, String message) {
-        for (String client : clients.keySet()) {
-            if (!client.equals(sender)) {
-                clients.get(client).sendMessage(sender + ": " + message);
+    public static void broadcastMessage(String sender, String encryptedMessage) {
+        for (String recipient : clients.keySet()) {
+            if (!recipient.equals(sender)) {
+                // Send message in real-time
+                clients.get(recipient).sendMessage(sender + ": " + encryptedMessage);
+                
+                // Store in database asynchronously
+                new Thread(() -> {
+                    MessageStorage.storeEncryptedMessage(sender, recipient, encryptedMessage);
+                }).start();
             }
         }
     }
 
-    public static void sendPrivateMessage(String sender, String recipient, String message) {
-        if (clients.containsKey(recipient)) {
-            clients.get(recipient).sendMessage("(Private) " + sender + ": " + message);
+    public static void sendPrivateMessage(String sender, String recipient, String encryptedMessage) {
+        ClientHandler recipientHandler = clients.get(recipient);
+        if (recipientHandler != null) {
+            // Send message in real-time
+            recipientHandler.sendMessage("(Private) " + sender + ": " + encryptedMessage);
+            
+            // Store in database asynchronously
+            new Thread(() -> {
+                MessageStorage.storeEncryptedMessage(sender, recipient, encryptedMessage);
+            }).start();
         }
     }
 }

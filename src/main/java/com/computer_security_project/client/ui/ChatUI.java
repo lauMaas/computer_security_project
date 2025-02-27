@@ -2,6 +2,8 @@ package com.computer_security_project.client.ui;
 
 import com.computer_security_project.client.ClientManager;
 import com.computer_security_project.server.MessageStorage;
+import com.computer_security_project.encryption.Encryptor;
+import com.computer_security_project.encryption.Decryptor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -52,20 +54,27 @@ public class ChatUI extends JFrame {
      */
     private void connectToServer() {
         try {
-            clientManager = ClientManager.getInstance(sender); // ✅ Reuse existing instance
+            clientManager = ClientManager.getInstance(sender);
     
-            // Start a separate thread to listen for incoming messages
             new Thread(() -> {
                 try {
                     String received;
                     while ((received = clientManager.receiveMessage()) != null) {
                         String[] parts = received.split(": ", 2);
                         if (parts.length == 2) {
-                            appendMessageToChat(parts[0], parts[1], Color.RED);
+                            // Only process messages from the current chat partner
+                            if (parts[0].equals(receiver) || parts[0].contains("(Private)")) {
+                                String decryptedMessage = Decryptor.decrypt(parts[1]);
+                                SwingUtilities.invokeLater(() -> {
+                                    appendMessageToChat(parts[0], decryptedMessage, Color.RED);
+                                });
+                            }
                         }
                     }
                 } catch (IOException e) {
-                    appendMessageToChat("System", "❌ Connection lost with server!", Color.BLACK);
+                    SwingUtilities.invokeLater(() -> {
+                        appendMessageToChat("System", "❌ Connection lost with server!", Color.BLACK);
+                    });
                 }
             }).start();
     
@@ -80,11 +89,15 @@ public class ChatUI extends JFrame {
     private void sendMessage() {
         String message = messageField.getText();
         if (!message.isEmpty()) {
-            clientManager.sendMessage(message);
+            String encryptedMessage = Encryptor.encrypt(message);
+            clientManager.sendMessage(encryptedMessage);
             messageField.setText("");
 
-            appendMessageToChat("Me", message, Color.BLUE);
-            MessageStorage.storeEncryptedMessage(sender, receiver, message);
+            // Show sent message immediately
+            SwingUtilities.invokeLater(() -> {
+                appendMessageToChat("Me", message, Color.BLUE);
+            });
+            MessageStorage.storeEncryptedMessage(sender, receiver, encryptedMessage);
         }
     }
 
@@ -96,7 +109,11 @@ public class ChatUI extends JFrame {
         List<String> messages = MessageStorage.loadMessages(sender, receiver);
 
         for (String msg : messages) {
-            appendMessageToChat(msg.split(": ")[0], msg.split(": ")[1], Color.GRAY);
+            String[] parts = msg.split(": ", 2);
+            if (parts.length == 2) {
+                String decryptedMessage = Decryptor.decrypt(parts[1]);
+                appendMessageToChat(parts[0], decryptedMessage, Color.GRAY);
+            }
         }
     }
 
