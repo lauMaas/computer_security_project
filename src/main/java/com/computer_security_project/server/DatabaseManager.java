@@ -16,9 +16,11 @@ public class DatabaseManager {
     }
 
     private static void loadConfig() {
-        try (InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("db_config.properties")) {
+        try (InputStream input = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("db_config.properties")) {
             if (input == null) {
-                throw new IOException("⚠️ db_config.properties file not found in classpath! Ensure it is inside src/main/resources/");
+                throw new IOException(
+                        "⚠️ db_config.properties file not found in classpath! Ensure it is inside src/main/resources/");
             }
 
             Properties props = new Properties();
@@ -46,9 +48,21 @@ public class DatabaseManager {
 
     public static void closeConnection() {
         try {
-            if (conn != null) conn.close();
+            if (conn != null)
+                conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("🔍 Testing database connection...");
+        Connection connection = getConnection();
+        if (connection != null) {
+            System.out.println("✅ Successfully connected to the database!");
+            closeConnection();
+        } else {
+            System.err.println("❌ Failed to connect to the database.");
         }
     }
 }

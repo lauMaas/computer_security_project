@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.computer_security_project</groupId>
@@ -35,15 +35,15 @@
             <scope>test</scope>
         </dependency>
 
-<!--Argon2 Dependency for Hashing Password -->
-            <dependency>
-        <groupId>de.mkammerer</groupId>
-        <artifactId>argon2-jvm</artifactId>
-        <version>2.11</version>
-    </dependency>
+        <!--Argon2
+        Dependency for Hashing Password -->
+        <dependency>
+            <groupId>de.mkammerer</groupId>
+            <artifactId>argon2-jvm</artifactId>
+            <version>2.11</version>
+        </dependency>
 
     </dependencies>
-
 
 
     <build>
@@ -59,7 +59,49 @@
                 </configuration>
             </plugin>
 
-            <!-- Assembly Plugin for creating a runnable JAR -->
+            <!-- Maven JAR Plugin for Separate Client & Server JARs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <!-- Server JAR -->
+                    <execution>
+                        <id>server-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>server</classifier> <!-- FIXED -->
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.computer_security_project.server.ChatServer</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+
+                    <!-- Client JAR -->
+                    <execution>
+                        <id>client-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>client</classifier> <!-- FIXED -->
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.computer_security_project.client.ChatClient</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Assembly Plugin for Including Dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
